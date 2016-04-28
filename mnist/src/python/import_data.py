@@ -46,6 +46,7 @@ def load_train(force_load=False):
     print(test_data.shape)
     return (train_data, cv_data, test_data)
 
+
 def load_test(force_load=False):
     print("Importing Real Test Data...")
     if any([
