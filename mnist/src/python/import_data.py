@@ -48,7 +48,6 @@ def load_train(force_load=False):
 
 def load_test(force_load=False):
     print("Importing Real Test Data...")
-
     if any([
         force_load,
         os.path.exists(CB.PATH_REAl_TEST),
