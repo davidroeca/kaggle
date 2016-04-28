@@ -1,9 +1,9 @@
 import numpy as np
 import tensorflow as tf
-import matplotlib.pyplot as plt
-import matplotlib.cm as cm
-from config_base import CB
 import import_data
+from config_base import CB
+from display import display_image
+
 
 
 def main():
@@ -11,10 +11,8 @@ def main():
     sample = train_data[np.random.choice(
         train_data.shape[0], 3, replace=False), :]
     for i in sample:
-        print('displaying #: {}'.format(int(i[0])))
-        plt.imshow(np.reshape(i[1:], [28, 28]), cmap=cm.binary)
-        plt.show(block=False)
-        input('Press Enter')
+        display_image(i[0], np.reshape(i[1:], [28, 28]))
+
 
 if __name__ == "__main__":
     main()
