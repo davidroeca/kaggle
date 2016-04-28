@@ -12,7 +12,8 @@ def main():
         train_data.shape[0], 3, replace=False), :]
     for i in sample:
         plt.imshow(np.reshape(i[1:], [28, 28]), cmap=cm.binary)
-    plt.show()
+        plt.show(block=False)
+        input('Press Enter')
 
 if __name__ == "__main__":
     main()
