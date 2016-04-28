@@ -4,17 +4,19 @@ import pickle
 from config_base import CB
 
 def pickle_data(dataset, path):
-    print("Pickling {}\n...".format(path))
+    basepath = os.path.basename(path)
+    print("Pickling {}\n...".format(basepath))
     with open(path, 'wb') as f:
         pickle.dump(dataset, f, pickle.HIGHEST_PROTOCOL)
-    print("Pickled {}".format(path))
+    print("Pickled {}".format(basepath))
     
 def load_pickled_data(path):
-    print("Loading {}\n...".format(path))
+    basepath = os.path.basename(path)
+    print("Loading {}\n...".format(basepath))
     with open(path, 'rb') as f:
         obj = pickle.load(f)
     np.random.shuffle(obj)
-    print("Loaded {}".format(path))
+    print("Loaded {}".format(basepath))
     return obj
 
 def load_train(force_load=False):

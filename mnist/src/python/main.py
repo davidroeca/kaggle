@@ -11,6 +11,7 @@ def main():
     sample = train_data[np.random.choice(
         train_data.shape[0], 3, replace=False), :]
     for i in sample:
+        print('displaying #: {}'.format(int(i[0])))
         plt.imshow(np.reshape(i[1:], [28, 28]), cmap=cm.binary)
         plt.show(block=False)
         input('Press Enter')
