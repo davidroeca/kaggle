@@ -60,3 +60,10 @@ target/
 
 #Ipython Notebook
 .ipynb_checkpoints
+
+# Virtualenv
+venv/
+
+# Data
+*/data/*
+!*/data/README.md
