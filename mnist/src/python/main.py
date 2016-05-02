@@ -20,7 +20,6 @@ def main():
     test_data, test_labels = extract_labels(test_data_lab, num_labels)
     image_dim = int(np.sqrt(train_data[0,:].shape[0]))
     if DISPLAY_SAMPLE:
-        random.sample
         sample_indeces = np.random.choice(train_data.shape[0], 3, replace=False)
         for i in sample_indeces:
             display_image(get_label(train_labels[i]),
@@ -30,12 +29,14 @@ def main():
     ############################################################
     # Hyper Parameters
     ############################################################
-    alpha = 0.005
-    lmbda = 1.0
-    num_steps = 1001
-    batch_size = 500
+    alpha0 = 0.1
+    lmbda = 5.0
+    num_steps = 3001
+    batch_size = 10
+    decay_rate = 1
+    decay_steps = 1000
     graph = tf.Graph()
-    layer_sizes = [image_dim * image_dim, 100, 30, output_size]
+    layer_sizes = [image_dim * image_dim, 30, output_size]
     with graph.as_default():
         ############################################################
         # Inputs
@@ -46,6 +47,10 @@ def main():
                 shape=(batch_size, num_labels))
         tf_cv_data = tf.constant(cv_data)
         tf_test_data = tf.constant(test_data)
+        ############################################################
+        # Variables
+        ############################################################
+        global_step = tf.Variable(0, trainable=False)
         ############################################################
         # Neural Network Helper Functions
         ############################################################
@@ -65,7 +70,7 @@ def main():
                 yield get_biases([layer_sizes[i]])
 
         def feed_forward(weights, biases, input_layer=tf_train_data,
-                training=True, activation=tf.nn.relu):
+                training=True, activation=tf.nn.sigmoid):
             a = input_layer
             num_weights = len(weights)
             for i, (w, b) in enumerate(zip(weights, biases)):
@@ -94,7 +99,10 @@ def main():
         ############################################################
         # Optimizer and Predictions
         ############################################################
-        optimizer = tf.train.GradientDescentOptimizer(alpha).minimize(loss)
+        alpha = tf.train.exponential_decay(alpha0, global_step, decay_steps,
+                decay_rate)
+        optimizer = tf.train.GradientDescentOptimizer(alpha).minimize(loss,
+                global_step=global_step)
 
         train_prediction = tf.nn.softmax(logits)
         cv_prediction = tf.nn.softmax(feed_forward(weights, biases,
