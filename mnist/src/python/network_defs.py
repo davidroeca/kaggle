@@ -28,10 +28,9 @@ class TfFullyConnected(LayerBase):
 
 class TfConv2d(LayerBase):
 
-    def __init__(self, activation, inp, patch_size, num_channels=1,
-            stride=[1, 2, 2, 1], padding='SAME'):
+    def __init__(self, activation, in_width, in_height, patch_size,
+            num_channels=1, stride=[1, 2, 2, 1], padding='SAME'):
         self.activation = activation
-        self.inp = inp
         self.patch_size = patch_size
         self.num_channels = num_channels
         self.stride = stride

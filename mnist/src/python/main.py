@@ -2,9 +2,15 @@ import random
 import numpy as np
 import tensorflow as tf
 import import_data
-from reformat_data import extract_labels, get_label
+from reformat_data import extract_labels, get_label, conv_reformat
 from config_base import CB
 from display import display_image
+from network_defs import (
+        TfFullyConnected,
+        TfConv2d,
+        TfMaxPool,
+        Network,
+        )
 
 DISPLAY_SAMPLE = False
 
@@ -19,12 +25,20 @@ def main():
     cv_data, cv_labels = extract_labels(cv_data_lab, num_labels)
     test_data, test_labels = extract_labels(test_data_lab, num_labels)
     image_dim = int(np.sqrt(train_data[0,:].shape[0]))
+    num_channels = 1 # no color
     if DISPLAY_SAMPLE:
         sample_indeces = np.random.choice(train_data.shape[0], 3, replace=False)
         for i in sample_indeces:
             display_image(get_label(train_labels[i]),
                     np.reshape(train_data[i], [image_dim, image_dim]))
     output_size = num_labels
+
+    ############################################################
+    # Convolutional Reformatting
+    ############################################################
+    train_data = conv_reformat(train_data, image_dim, image_dim, num_channels)
+    cv_data = conv_reformat(train_data, image_dim, image_dim, num_channels)
+    test_data = conv_reformat(train_data, image_dim, image_dim, num_channels)
 
     ############################################################
     # Hyper Parameters
@@ -37,7 +51,18 @@ def main():
     decay_steps = 1000
     graph = tf.Graph()
     layer_sizes = [image_dim * image_dim, 30, output_size]
+
     with graph.as_default():
+        ############################################################
+        # Network Definition
+        ############################################################
+        network = Network([
+            TfFullyConnected(tf.nn.relu, image_dim * image_dim, 30),
+            TfConv2d(tf.nn.relu, image_dim, image_dim, patch_size,
+                num_channels=num_channels, stride=[1, 2, 2, 1]),
+            TfMaxPool(),
+            ])
+
         ############################################################
         # Inputs
         ############################################################
@@ -54,33 +79,6 @@ def main():
         ############################################################
         # Neural Network Helper Functions
         ############################################################
-        def get_weights(shape):
-            return tf.Variable(
-                    tf.truncated_normal(shape, stddev=1/np.sqrt(shape[0])))
-
-        def get_biases(shape):
-            return tf.Variable(tf.truncated_normal(shape, stddev=1.0))
-
-        def get_all_weights(layer_sizes):
-            for i in range(1, len(layer_sizes)):
-                yield get_weights(layer_sizes[i-1:i+1])
-
-        def get_all_biases(layer_sizes):
-            for i in range(1, len(layer_sizes)):
-                yield get_biases([layer_sizes[i]])
-
-        def feed_forward(weights, biases, input_layer=tf_train_data,
-                training=True, activation=tf.nn.sigmoid):
-            a = input_layer
-            num_weights = len(weights)
-            for i, (w, b) in enumerate(zip(weights, biases)):
-                z = tf.matmul(a, w) + b
-                if i+1 == num_weights:
-                    a = z
-                else:
-                    a = activation(z)
-            return a
-
         def compute_loss(logits, labels, weights, biases, lmbda):
             unreg = tf.nn.softmax_cross_entropy_with_logits(logits, labels)
             reg = lmbda * (np.sum(tf.nn.l2_loss(w) for w in weights) +\
