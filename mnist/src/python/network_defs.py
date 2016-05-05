@@ -60,7 +60,7 @@ class TfMaxPool(LayerBase):
         return tf.nn.max_pool(a, self.kernel_size, self.stride_length,
                 self.padding) 
 
-def Network(layers):
+class Network(object):
     
     def __init__(self, layers):
         self.layers = layers
