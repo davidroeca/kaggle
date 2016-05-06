@@ -9,7 +9,7 @@ def pickle_data(dataset, path):
     with open(path, 'wb') as f:
         pickle.dump(dataset, f, pickle.HIGHEST_PROTOCOL)
     print("Pickled {}".format(basepath))
-    
+
 def load_pickled_data(path):
     basepath = os.path.basename(path)
     print("Loading {}\n...".format(basepath))
@@ -22,13 +22,13 @@ def load_pickled_data(path):
 def load_train(force_load=False):
     print("Importing Training Data...")
     if any([
-        force_load,
-        not os.path.exists(CB.PATH_TRAIN),
-        not os.path.exists(CB.PATH_CV),
-        not os.path.exists(CB.PATH_TEST),
-        ]):
+            force_load,
+            not os.path.exists(CB.PATH_TRAIN),
+            not os.path.exists(CB.PATH_CV),
+            not os.path.exists(CB.PATH_TEST),
+    ]):
         train_in = np.genfromtxt(CB.PATH_TRAIN_CSV, delimiter=',',
-                skip_header=1)
+                                 skip_header=1)
         num_train = len(train_in)
         train_length = (num_train * 3) // 5
         cv_length = train_length // 3
@@ -50,12 +50,12 @@ def load_train(force_load=False):
 def load_test(force_load=False):
     print("Importing Real Test Data...")
     if any([
-        force_load,
-        os.path.exists(CB.PATH_REAl_TEST),
-        ]):
+            force_load,
+            os.path.exists(CB.PATH_REAl_TEST),
+    ]):
 
         real_test_in = np.genfromtxt(CB.PATH_REAL_TEST_CSV, delimiter=',',
-                skip_header=1)
+                                     skip_header=1)
         pickle_data(real_test_data, CB.PATH_REAL_TEST)
     else:
         print("Data already pickled; skipping")

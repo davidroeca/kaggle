@@ -6,11 +6,11 @@ from reformat_data import extract_labels, get_label, conv_reformat
 from config_base import CB
 from display import display_image
 from network_defs import (
-        TfFullyConnected,
-        TfConv2d,
-        TfMaxPool,
-        Network,
-        )
+    TfFullyConnected,
+    TfConv2d,
+    TfMaxPool,
+    Network,
+)
 
 DISPLAY_SAMPLE = False
 
@@ -30,7 +30,7 @@ def main():
         sample_indeces = np.random.choice(train_data.shape[0], 3, replace=False)
         for i in sample_indeces:
             display_image(get_label(train_labels[i]),
-                    np.reshape(train_data[i], [image_dim, image_dim]))
+                          np.reshape(train_data[i], [image_dim, image_dim]))
     output_size = num_labels
 
     ############################################################
@@ -59,17 +59,17 @@ def main():
         network = Network([
             TfFullyConnected(tf.nn.relu, image_dim * image_dim, 30),
             TfConv2d(tf.nn.relu, image_dim, image_dim, patch_size,
-                num_channels=num_channels, stride=[1, 2, 2, 1]),
+                     num_channels=num_channels, stride=[1, 2, 2, 1]),
             TfMaxPool(),
-            ])
+        ])
 
         ############################################################
         # Inputs
         ############################################################
         tf_train_data = tf.placeholder(tf.float32,
-                shape=(batch_size, image_dim * image_dim))
+                                       shape=(batch_size, image_dim * image_dim))
         tf_train_labels = tf.placeholder(tf.float32,
-                shape=(batch_size, num_labels))
+                                         shape=(batch_size, num_labels))
         tf_cv_data = tf.constant(cv_data)
         tf_test_data = tf.constant(test_data)
         ############################################################
@@ -82,7 +82,7 @@ def main():
         def compute_loss(logits, labels, weights, biases, lmbda):
             unreg = tf.nn.softmax_cross_entropy_with_logits(logits, labels)
             reg = lmbda * (np.sum(tf.nn.l2_loss(w) for w in weights) +\
-                    np.sum(tf.nn.l2_loss(b) for b in biases))
+                           np.sum(tf.nn.l2_loss(b) for b in biases))
             return tf.reduce_mean(unreg + reg)
 
         ############################################################
@@ -98,15 +98,15 @@ def main():
         # Optimizer and Predictions
         ############################################################
         alpha = tf.train.exponential_decay(alpha0, global_step, decay_steps,
-                decay_rate)
+                                           decay_rate)
         optimizer = tf.train.GradientDescentOptimizer(alpha).minimize(loss,
-                global_step=global_step)
+                                                                      global_step=global_step)
 
         train_prediction = tf.nn.softmax(logits)
         cv_prediction = tf.nn.softmax(feed_forward(weights, biases,
-            input_layer=tf_cv_data))
+                                                   input_layer=tf_cv_data))
         test_prediction = tf.nn.softmax(feed_forward(weights, biases,
-            input_layer=tf_test_data))
+                                                     input_layer=tf_test_data))
 
     with tf.Session(graph=graph) as session:
         tf.initialize_all_variables().run()
@@ -115,9 +115,9 @@ def main():
             batch_data = train_data[offset:offset + batch_size, :]
             batch_labels = train_labels[offset:offset + batch_size, :]
             feed_dict = { tf_train_data: batch_data,
-                    tf_train_labels: batch_labels}
+                         tf_train_labels: batch_labels}
             _, loss_out, train_predict_out = session.run(
-                    [optimizer, loss, train_prediction], feed_dict=feed_dict)
+                [optimizer, loss, train_prediction], feed_dict=feed_dict)
             if step % 100 == 0:
                 print("Mini batch loss step {}: {}".format(step, loss_out))
                 print("Mini batch accuracy: {}".format(
