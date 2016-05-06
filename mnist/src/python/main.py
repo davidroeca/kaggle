@@ -36,9 +36,9 @@ def main():
     ############################################################
     # Convolutional Reformatting
     ############################################################
-    train_data = conv_reformat(train_data, image_dim, image_dim, num_channels)
-    cv_data = conv_reformat(train_data, image_dim, image_dim, num_channels)
-    test_data = conv_reformat(train_data, image_dim, image_dim, num_channels)
+    # train_data = conv_reformat(train_data, image_dim, image_dim, num_channels)
+    # cv_data = conv_reformat(train_data, image_dim, image_dim, num_channels)
+    # test_data = conv_reformat(train_data, image_dim, image_dim, num_channels)
 
     ############################################################
     # Hyper Parameters
@@ -58,9 +58,13 @@ def main():
         ############################################################
         network = Network([
             TfFullyConnected(tf.nn.relu, image_dim * image_dim, 30),
-            TfConv2d(tf.nn.relu, image_dim, image_dim, patch_size,
-                     num_channels=num_channels, stride=[1, 2, 2, 1]),
+            TfConv2d(tf.nn.relu, image_dim, image_dim, 5, 32,
+                     num_channels=num_channels, stride=[1, 1, 1, 1]),
             TfMaxPool(),
+            TfConv2d(tf.nn.relu, 5, 5, 32, 64,
+                     num_channels=num_channels, stride=[1, 1, 1, 1]),
+            TfMaxPool(),
+            # TfDenselyConnectedLayer(tf.nn.relu,
         ])
 
         ############################################################

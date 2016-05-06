@@ -28,8 +28,10 @@ class TfFullyConnected(LayerBase):
 
 class TfConv2d(LayerBase):
 
-    def __init__(self, activation, in_width, in_height, patch_size,
+    def __init__(self, activation, in_width, in_height, patch_size, depth,
                  num_channels=1, stride=[1, 2, 2, 1], padding='SAME'):
+        self.in_width = in_width
+        self.in_height = in_height
         self.activation = activation
         self.patch_size = patch_size
         self.num_channels = num_channels
@@ -45,6 +47,7 @@ class TfConv2d(LayerBase):
                 tf.truncated_normal((depth,), stddev=1.0))
 
     def forward_op(self, a):
+        a = tf.reshape(a, [-1, self.in_height, self.in_width, 1])
         z = tf.nn.conv2d(a, self.weights, self.stride, self.padding)
         return self.activation(z)
 
@@ -58,6 +61,26 @@ class TfMaxPool(LayerBase):
     def forward_op(self, a):
         return tf.nn.max_pool(a, self.kernel_size, self.stride_length,
                               self.padding)
+
+class TfDenselyConnectedLayer(LayerBase):
+
+    def __init__(self, activation, in_width, in_height, num_in, num_out):
+        self.activation = activation
+        self.flat_size = self.in_width * self.in_width * num_in
+        self.weights = tf.Variable(
+            tf.truncated_normal((self.flat_size, num_out),
+                                stddev=1/np.sqrt(num_in))))
+        if self.activation == tf.nn.relu:
+            self.biases = tf.Variable(tf.truncated_normal((num_out,),
+                                                          stddev=1.0))
+        else:
+            self.biases = tf.Variable(tf.truncated_normal((num_out,),
+                                                          stddev=1.0))
+
+    def forward_op(self, a):
+        a = tf.reshape(a, [-1, self.flat_size])
+        z = tf.matmul(a, self.weights) + self.biases
+        return activation(z)
 
 class Network(object):
 
