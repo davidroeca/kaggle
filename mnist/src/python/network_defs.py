@@ -7,7 +7,7 @@ class LayerBase(object, metaclass=ABCMeta):
     def forward_op(self, a):
         pass
 
-class TfFullyConnected(LayerBase):
+class TfFullyConnectedLayer(LayerBase):
 
     def __init__(self, activation, num_in, num_out):
         self.activation = activation
@@ -27,7 +27,7 @@ class TfFullyConnected(LayerBase):
         z = tf.matmul(a, self.weights) + self.biases
         return self.activation(z)
 
-class TfConv2d(LayerBase):
+class TfConv2dLayer(LayerBase):
 
     def __init__(self, activation, in_width, in_height, patch_size, depth,
                  num_channels=1, stride=[1, 2, 2, 1], padding='SAME'):
@@ -49,12 +49,11 @@ class TfConv2d(LayerBase):
                 tf.truncated_normal((depth,), stddev=1.0))
 
     def forward_op(self, a):
-        print(a.get_shape())
         a = tf.reshape(a, [-1, self.in_height, self.in_width, self.num_channels])
         z = tf.nn.conv2d(a, self.weights, self.stride, self.padding)
         return self.activation(z)
 
-class TfMaxPool(LayerBase):
+class TfMaxPoolLayer(LayerBase):
 
     def __init__(self, kernel_size=[1, 2, 2, 1], stride_length=[1, 2, 2, 1],
                  padding='SAME'):

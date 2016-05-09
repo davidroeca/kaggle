@@ -41,9 +41,6 @@ def load_train(force_load=False):
     cv_data = load_pickled_data(CB.PATH_CV)
     test_data = load_pickled_data(CB.PATH_TEST)
     print("Successfully Imported Training Data!")
-    print(train_data.shape)
-    print(cv_data.shape)
-    print(test_data.shape)
     return (train_data, cv_data, test_data)
 
 

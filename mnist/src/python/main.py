@@ -6,9 +6,9 @@ from reformat_data import extract_labels, get_label, conv_reformat
 from config_base import CB
 from display import display_image
 from network_defs import (
-    TfFullyConnected,
-    TfConv2d,
-    TfMaxPool,
+    TfFullyConnectedLayer,
+    TfConv2dLayer,
+    TfMaxPoolLayer,
     TfDenselyConnectedLayer,
     TfSoftmaxLayer,
     Network,
@@ -38,29 +38,28 @@ def main():
     ############################################################
     # Hyper Parameters
     ############################################################
-    # alpha0 = 0.1
-    alpha = 1e-4
-    lmbda = 5.0
-    num_steps = 3001
+    alpha0 = 1e-4
+    lmbda = 1e-5
+    num_steps = 20001
     batch_size = 50
-    decay_rate = 1
+    decay_rate = 0.98
+    decay_rate = 1.0
     decay_steps = 1000
     graph = tf.Graph()
-    layer_sizes = [image_dim * image_dim, 30, output_size]
 
     with graph.as_default():
         ############################################################
         # Network Definition
         ############################################################
         network = Network([
-            TfConv2d(tf.nn.relu, image_dim, image_dim, 5, 32,
+            TfConv2dLayer(tf.nn.relu, image_dim, image_dim, 5, 32,
                      num_channels=num_channels, stride=[1, 1, 1, 1]),
-            TfMaxPool(),
-            TfConv2d(tf.nn.relu, 14, 14, 5, 64,
+            TfMaxPoolLayer(),
+            TfConv2dLayer(tf.nn.relu, 14, 14, 5, 64,
                      num_channels=32, stride=[1, 1, 1, 1]),
-            TfMaxPool(),
+            TfMaxPoolLayer(),
             TfDenselyConnectedLayer(tf.nn.relu, 7, 7, 64, 1024),
-            TfFullyConnected(lambda x: x, 1024, 10),
+            TfFullyConnectedLayer(lambda x: x, 1024, 10),
             TfSoftmaxLayer(),
         ])
 
@@ -87,8 +86,8 @@ def main():
         ############################################################
         # Optimizer and Predictions
         ############################################################
-        # alpha = tf.train.exponential_decay(alpha0, global_step, decay_steps,
-                                           # decay_rate)
+        alpha = tf.train.exponential_decay(alpha0, global_step, decay_steps,
+                                           decay_rate)
         optimizer = tf.train.AdamOptimizer(alpha).minimize(loss,
                                                            global_step=global_step)
 
