@@ -9,6 +9,8 @@ from network_defs import (
     TfFullyConnected,
     TfConv2d,
     TfMaxPool,
+    TfDenselyConnectedLayer,
+    TfSoftmaxLayer,
     Network,
 )
 
@@ -34,19 +36,13 @@ def main():
     output_size = num_labels
 
     ############################################################
-    # Convolutional Reformatting
-    ############################################################
-    # train_data = conv_reformat(train_data, image_dim, image_dim, num_channels)
-    # cv_data = conv_reformat(train_data, image_dim, image_dim, num_channels)
-    # test_data = conv_reformat(train_data, image_dim, image_dim, num_channels)
-
-    ############################################################
     # Hyper Parameters
     ############################################################
-    alpha0 = 0.1
+    # alpha0 = 0.1
+    alpha = 1e-4
     lmbda = 5.0
     num_steps = 3001
-    batch_size = 10
+    batch_size = 50
     decay_rate = 1
     decay_steps = 1000
     graph = tf.Graph()
@@ -57,14 +53,15 @@ def main():
         # Network Definition
         ############################################################
         network = Network([
-            TfFullyConnected(tf.nn.relu, image_dim * image_dim, 30),
             TfConv2d(tf.nn.relu, image_dim, image_dim, 5, 32,
                      num_channels=num_channels, stride=[1, 1, 1, 1]),
             TfMaxPool(),
-            TfConv2d(tf.nn.relu, 5, 5, 32, 64,
-                     num_channels=num_channels, stride=[1, 1, 1, 1]),
+            TfConv2d(tf.nn.relu, 14, 14, 5, 64,
+                     num_channels=32, stride=[1, 1, 1, 1]),
             TfMaxPool(),
-            # TfDenselyConnectedLayer(tf.nn.relu,
+            TfDenselyConnectedLayer(tf.nn.relu, 7, 7, 64, 1024),
+            TfFullyConnected(lambda x: x, 1024, 10),
+            TfSoftmaxLayer(),
         ])
 
         ############################################################
@@ -80,37 +77,26 @@ def main():
         # Variables
         ############################################################
         global_step = tf.Variable(0, trainable=False)
-        ############################################################
-        # Neural Network Helper Functions
-        ############################################################
-        def compute_loss(logits, labels, weights, biases, lmbda):
-            unreg = tf.nn.softmax_cross_entropy_with_logits(logits, labels)
-            reg = lmbda * (np.sum(tf.nn.l2_loss(w) for w in weights) +\
-                           np.sum(tf.nn.l2_loss(b) for b in biases))
-            return tf.reduce_mean(unreg + reg)
 
         ############################################################
-        # Neural Network Logic
+        # Neural Network Training
         ############################################################
-        weights = [i for i in get_all_weights(layer_sizes)]
-        biases = [i for i in get_all_biases(layer_sizes)]
-
-        logits = feed_forward(weights, biases)
-        loss = compute_loss(logits, tf_train_labels, weights, biases, lmbda)
+        train_prediction = network.feed_forward(tf_train_data)
+        loss = network.x_entropy_loss(train_prediction, tf_train_labels, lmbda)
 
         ############################################################
         # Optimizer and Predictions
         ############################################################
-        alpha = tf.train.exponential_decay(alpha0, global_step, decay_steps,
-                                           decay_rate)
-        optimizer = tf.train.GradientDescentOptimizer(alpha).minimize(loss,
-                                                                      global_step=global_step)
+        # alpha = tf.train.exponential_decay(alpha0, global_step, decay_steps,
+                                           # decay_rate)
+        optimizer = tf.train.AdamOptimizer(alpha).minimize(loss,
+                                                           global_step=global_step)
 
-        train_prediction = tf.nn.softmax(logits)
-        cv_prediction = tf.nn.softmax(feed_forward(weights, biases,
-                                                   input_layer=tf_cv_data))
-        test_prediction = tf.nn.softmax(feed_forward(weights, biases,
-                                                     input_layer=tf_test_data))
+        ############################################################
+        # Other Predictions
+        ############################################################
+        cv_prediction = network.feed_forward(tf_cv_data)
+        test_prediction = network.feed_forward(tf_test_data)
 
     with tf.Session(graph=graph) as session:
         tf.initialize_all_variables().run()
