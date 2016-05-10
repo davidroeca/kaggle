@@ -43,7 +43,6 @@ def main():
     num_steps = 20001
     batch_size = 50
     decay_rate = 0.98
-    decay_rate = 1.0
     decay_steps = 1000
     graph = tf.Graph()
 
