@@ -40,7 +40,7 @@ def main():
     ############################################################
     alpha0 = 1e-4
     lmbda = 1e-5
-    num_steps = 20001
+    num_steps = 6001
     batch_size = 50
     decay_rate = 0.98
     decay_steps = 1000
