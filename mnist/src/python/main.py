@@ -38,12 +38,12 @@ def main():
     ############################################################
     # Hyper Parameters
     ############################################################
-    alpha0 = 1e-4
-    lmbda = 1e-5
-    num_steps = 6001
-    batch_size = 50
+    alpha0 = 5e-5
+    lmbda = 5e-4
+    num_steps = 5001
+    batch_size = 100
     decay_rate = 0.98
-    decay_steps = 1000
+    decay_steps = 700
     graph = tf.Graph()
 
     with graph.as_default():
@@ -51,7 +51,7 @@ def main():
         # Network Definition
         ############################################################
         network = Network([
-            TfConv2dLayer(tf.nn.relu, image_dim, image_dim, 5, 32,
+            TfConv2dLayer(tf.nn.relu, image_dim, image_dim, 3, 32,
                      num_channels=num_channels, stride=[1, 1, 1, 1]),
             TfMaxPoolLayer(),
             TfConv2dLayer(tf.nn.relu, 14, 14, 5, 64,
