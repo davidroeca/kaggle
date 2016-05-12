@@ -35,10 +35,20 @@ class LayerBase(object, metaclass=ABCMeta):
     def biases(self, b):
         self._biases = b
 
+    @property
+    def lmbda(self):
+        if not hasattr(self, '_lmbda'):
+            self._lmbda = 0.0
+        return self._lmbda
+
+    @lmbda.setter
+    def lmbda(self, lmbda):
+        self._lmbda = lmbda
+
 class TfFullyConnectedLayer(LayerBase):
     '''The most basic layer for a neural network'''
 
-    def __init__(self, activation, num_in, num_out):
+    def __init__(self, activation, num_in, num_out, lmbda=0.0):
         '''Instantiate the layer
 
         :param function activation: for neuron activation
@@ -57,6 +67,7 @@ class TfFullyConnectedLayer(LayerBase):
         else:
             self.biases = tf.Variable(tf.truncated_normal((num_out,),
                                                           stddev=1.0))
+        self.lmbda = lmbda
 
     def forward_op(self, a):
         '''Do feedforward as simple activation(matrix multiply, add)
@@ -71,7 +82,8 @@ class TfConv2dLayer(LayerBase):
     '''Specifies a 2d convolutional layer'''
 
     def __init__(self, activation, in_width, in_height, patch_size, depth,
-                 num_channels=1, stride=[1, 2, 2, 1], padding='SAME'):
+                 num_channels=1, stride=[1, 2, 2, 1], padding='SAME',
+                 lmbda=0):
         '''Initialize the convolutional layer
 
         :param function activation: for neuron activation
@@ -99,6 +111,7 @@ class TfConv2dLayer(LayerBase):
         else:
             self.biases = tf.Variable(
                 tf.truncated_normal((depth,), stddev=1.0))
+        self.lmbda = lmbda
 
     def forward_op(self, a):
         '''Reshape a to a valid tf conv2d input and create the convolution
@@ -114,7 +127,7 @@ class TfMaxPoolLayer(LayerBase):
     '''Specifies a max pooling layer'''
 
     def __init__(self, kernel_size=[1, 2, 2, 1], stride_length=[1, 2, 2, 1],
-                 padding='SAME'):
+                 padding='SAME', lmbda=0):
         '''Initialize the max pooling layer
 
         :param list(int) kernel_size: the tf-defined kernel size
@@ -124,6 +137,7 @@ class TfMaxPoolLayer(LayerBase):
         self.kernel_size = kernel_size
         self.stride_length = stride_length
         self.padding = padding
+        self.lmbda = lmbda
 
     def forward_op(self, a):
         '''Take a convolutional output and do a max pool
@@ -137,7 +151,8 @@ class TfMaxPoolLayer(LayerBase):
 class TfDenselyConnectedLayer(LayerBase):
     '''Represents a layer that flattens convolutions before output'''
 
-    def __init__(self, activation, in_width, in_height, num_in, num_out):
+    def __init__(self, activation, in_width, in_height, num_in, num_out,
+                 lmbda=0):
         '''Instantiate the layer
 
         :param function activation: for neuron activation
@@ -157,6 +172,7 @@ class TfDenselyConnectedLayer(LayerBase):
         else:
             self.biases = tf.Variable(tf.truncated_normal((num_out,),
                                                           stddev=1.0))
+        self.lmbda = lmbda
 
     def forward_op(self, a):
         '''Take a convolutional output and flatten
@@ -201,19 +217,15 @@ class Network(object):
             a = layer.forward_op(a)
         return a
 
-    def x_entropy_loss(self, tf_train_prediction, tf_train_labels, lmbda):
+    def x_entropy_loss(self, tf_train_prediction, tf_train_labels):
         '''Takes feed_forward output, the labels, and regularization to
         compute the loss
 
         :param tensor tf_train_prediction: the feed_forward output
         :param tensor tf_train_labels: the real labels for the output
-        :param float lmbda: the regularization constant
         :returns float: the cross-entropy loss of prediction
         '''
-        weights = [l.weights for l in self.layers]
-        biases = [l.biases for l in self.layers]
         unreg = -tf.reduce_sum(tf_train_labels * tf.log(tf_train_prediction),
                                reduction_indices=[1])
-        reg = lmbda * (np.sum(tf.nn.l2_loss(w) for w in weights) +
-                            np.sum(tf.nn.l2_loss(b) for b in biases))
+        reg = np.sum(l.lmbda * tf.nn.l2_loss(l.weights) for l in self.layers)
         return tf.reduce_mean(unreg + reg)

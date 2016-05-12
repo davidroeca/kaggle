@@ -38,12 +38,15 @@ def main():
     ############################################################
     # Hyper Parameters
     ############################################################
-    alpha0 = 5e-5
-    lmbda = 5e-4
+    alpha0 = 7e-5
+    conv_lambda = 1e-5
+    dense_lambda = 1e-3
+    conv_lambda = 0
+    dense_lambda = 0
     num_steps = 5001
     batch_size = 100
-    decay_rate = 0.98
-    decay_steps = 700
+    decay_rate = 0.8
+    decay_steps = 500
     graph = tf.Graph()
 
     with graph.as_default():
@@ -52,12 +55,15 @@ def main():
         ############################################################
         network = Network([
             TfConv2dLayer(tf.nn.relu, image_dim, image_dim, 3, 32,
-                     num_channels=num_channels, stride=[1, 1, 1, 1]),
+                          num_channels=num_channels, stride=[1, 1, 1, 1],
+                          lmbda=conv_lambda),
             TfMaxPoolLayer(),
             TfConv2dLayer(tf.nn.relu, 14, 14, 5, 64,
-                     num_channels=32, stride=[1, 1, 1, 1]),
+                          num_channels=32, stride=[1, 1, 1, 1],
+                          lmbda=conv_lambda),
             TfMaxPoolLayer(),
-            TfDenselyConnectedLayer(tf.nn.relu, 7, 7, 64, 1024),
+            TfDenselyConnectedLayer(tf.nn.relu, 7, 7, 64, 1024,
+                                    lmbda=dense_lambda),
             TfFullyConnectedLayer(lambda x: x, 1024, 10),
             TfSoftmaxLayer(),
         ])
@@ -80,7 +86,7 @@ def main():
         # Neural Network Training
         ############################################################
         train_prediction = network.feed_forward(tf_train_data)
-        loss = network.x_entropy_loss(train_prediction, tf_train_labels, lmbda)
+        loss = network.x_entropy_loss(train_prediction, tf_train_labels)
 
         ############################################################
         # Optimizer and Predictions
