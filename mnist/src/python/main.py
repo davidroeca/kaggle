@@ -5,7 +5,7 @@ import import_data
 from reformat_data import extract_labels, get_label, conv_reformat
 from config_base import CB
 from display import display_image
-from network_defs import (
+from tf_utils.network_defs import (
     TfFullyConnectedLayer,
     TfConv2dLayer,
     TfMaxPoolLayer,
